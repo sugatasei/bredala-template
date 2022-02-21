@@ -21,9 +21,9 @@ class View
     /**
      * @param string $file
      * @param array $bag
-     * @return self
+     * @return static
      */
-    public static function create(string $file, array $data = []): self
+    public static function create(string $file, array $data = []): static
     {
         return new static($file, $data);
     }
@@ -31,9 +31,9 @@ class View
     /**
      * @param string $file
      * @param array $data
-     * @return self
+     * @return static
      */
-    public function include(string $file, array $data = []): self
+    public function include(string $file, array $data = []): static
     {
         return new static($file, $data + $this->data);
     }
@@ -43,9 +43,9 @@ class View
     /**
      * @param string $name
      * @param mixed $value
-     * @return self
+     * @return static
      */
-    public function set(string $name, $value): self
+    public function set(string $name, $value): static
     {
         $this->data[$name] = $value;
 
@@ -55,9 +55,9 @@ class View
     /**
      * @param string $name
      * @param mixed $value
-     * @return self
+     * @return static
      */
-    public function add(string $name, $value): self
+    public function add(string $name, $value): static
     {
         if (!isset($this->data[$name])) {
             $this->data[$name] = [];
