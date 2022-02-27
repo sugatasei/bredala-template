@@ -120,6 +120,6 @@ class Utils
      */
     public static function xss(string $value): string
     {
-        return htmlspecialchars($value);
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5);
     }
 }
