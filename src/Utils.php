@@ -86,7 +86,7 @@ class Utils
             return "<{$tag}{$argStr} />";
         }
 
-        return "<{$tag}{$argStr}>{$content}</{$tag}";
+        return "<{$tag}{$argStr}>{$content}</{$tag}>\n";
     }
 
     /**
