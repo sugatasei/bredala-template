@@ -139,21 +139,12 @@ class Utils
         return self::htmlEncode(json_encode($value));
     }
 
-    public static function htmlEncode(?string $value): string
+    private static function htmlEncode(?string $value): string
     {
         if ($value === null) {
             return '';
         }
 
         return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
-    }
-
-    public static function htmlDecode(?string $value): string
-    {
-        if ($value === null) {
-            return '';
-        }
-
-        return html_entity_decode($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
     }
 }
