@@ -36,7 +36,7 @@ class Utils
     {
         $value = json_encode($value, JSON_HEX_APOS);
 
-        return self::tag("script", "const {$name} = {$value}");
+        return self::tag("script", "const {$name} = {$value};");
     }
 
     /**
@@ -116,10 +116,44 @@ class Utils
     /**
      * Escapes a value
      *
-     * @param string $value
+     * @param mixed $value
      */
-    public static function xss(string $value): string
+    public static function xss(mixed $value): string
     {
-        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5);
+        if ($value === null) {
+            return '';
+        }
+
+        if (is_numeric($value)) {
+            return (string) $value;
+        }
+
+        if (is_string($value)) {
+            return self::htmlEncode($value);
+        }
+
+        if (is_bool($value)) {
+            return $value ? '1' : '0';
+        }
+
+        return self::htmlEncode(json_encode($value));
+    }
+
+    public static function htmlEncode(?string $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        return htmlspecialchars($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
+    }
+
+    public static function htmlDecode(?string $value): string
+    {
+        if ($value === null) {
+            return '';
+        }
+
+        return html_entity_decode($value, ENT_QUOTES | ENT_SUBSTITUTE | ENT_HTML5, 'UTF-8');
     }
 }
