@@ -3,11 +3,16 @@
 namespace Bredala\Template;
 
 use InvalidArgumentException;
+use Stringable;
 
-class View
+class View implements Stringable
 {
+    use BagTrait;
+    use HelperTrait;
+
     private string $file;
-    private array $data;
+
+    // -------------------------------------------------------------------------
 
     /**
      * @param string $file
@@ -15,7 +20,7 @@ class View
     public function __construct(string $file, array $data = [])
     {
         $this->file = $file;
-        $this->data = $data;
+        $this->import($data);
     }
 
     /**
@@ -35,46 +40,10 @@ class View
      */
     public function include(string $file, array $data = []): static
     {
-        return new static($file, $data + $this->data);
+        return new static($file, $data + $this->export());
     }
 
     // -------------------------------------------------------------------------
-
-    /**
-     * @param string $name
-     * @param mixed $value
-     * @return static
-     */
-    public function set(string $name, $value): static
-    {
-        $this->data[$name] = $value;
-
-        return $this;
-    }
-
-    /**
-     * @param string $name
-     * @param mixed $value
-     * @return static
-     */
-    public function add(string $name, $value): static
-    {
-        if (!isset($this->data[$name])) {
-            $this->data[$name] = [];
-        } elseif (!is_array($this->data[$name])) {
-            return $this;
-        }
-
-        if (!is_array($value)) {
-            $value = [$value];
-        }
-
-        foreach ($value as $v) {
-            $this->data[$name][] = $v;
-        }
-
-        return $this;
-    }
 
     /**
      * @return string
@@ -97,8 +66,10 @@ class View
     /**
      * @return string
      */
-    public function __toString()
+    public function __toString(): string
     {
         return $this->load();
     }
+
+    // -------------------------------------------------------------------------
 }

@@ -2,13 +2,25 @@
 
 namespace Bredala\Template;
 
-class Utils
+trait HelperTrait
 {
-    const AUTOCLOSE = [
-        "area", "base", "br", "col", "embed", "hr", "img", "input",
-        "keygen", "link", "meta", "param", "source", "track", "wbr",
+    private static array $autoclose = [
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "keygen",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
     ];
-
 
     /**
      * Builds meta tags
@@ -31,8 +43,9 @@ class Utils
      *
      * @param string $name
      * @param mixed $value The value is json encoded
+     * @return string
      */
-    public static function jsVars(string $name, $value)
+    public static function jsVars(string $name, $value): string
     {
         $value = json_encode($value, JSON_HEX_APOS);
 
@@ -43,13 +56,15 @@ class Utils
      * Builds scripts tag
      *
      * @param array $urls
+     * @return string
      */
-    public static function scripts(array $urls)
+    public static function scripts(array $urls, bool $module = false): string
     {
         $html = "";
+        $attr = $module ? ["type" => 'module'] : [];
         foreach ($urls as $url) {
-            $html .= self::tag("script", "", [
-                "src" => $url,
+            $html .= self::tag("script", "", $attr + [
+                'src' => $url
             ]);
         }
         return $html;
@@ -59,8 +74,9 @@ class Utils
      * Builds styles tag
      *
      * @param array $urls
+     * @return string
      */
-    public static function styles(array $urls)
+    public static function styles(array $urls): string
     {
         $html = "";
         foreach ($urls as $url) {
@@ -77,12 +93,13 @@ class Utils
      * Builds html tag
      *
      * @param array $urls
+     * @return string
      */
-    public static function tag(string $tag, string $content = "", array $args = [])
+    public static function tag(string $tag, string $content = "", array $args = []): string
     {
         $argStr = self::attrToString($args);
 
-        if (in_array($tag, self::AUTOCLOSE)) {
+        if (in_array($tag, self::$autoclose)) {
             return "<{$tag}{$argStr} />";
         }
 
@@ -95,7 +112,7 @@ class Utils
      * @param array $attributes
      * @return string
      */
-    public static function attrToString($attributes)
+    public static function attrToString($attributes): string
     {
         $html = "";
 
