@@ -33,7 +33,7 @@ trait HelperTrait
         $html = "";
         foreach ($meta as $arg) {
             $tag = isset($arg["rel"]) ? "link" : "meta";
-            $html .= self::tag($tag, "", $arg);
+            $html .= self::tag($tag, $arg);
         }
         return $html;
     }
@@ -49,7 +49,7 @@ trait HelperTrait
     {
         $value = json_encode($value, JSON_HEX_APOS);
 
-        return self::tag("script", "const {$name} = {$value};");
+        return self::tag("script", null, "const {$name} = {$value};");
     }
 
     /**
@@ -63,7 +63,7 @@ trait HelperTrait
         $html = "";
         $attr = $module ? ["type" => 'module'] : [];
         foreach ($urls as $url) {
-            $html .= self::tag("script", "", $attr + [
+            $html .= self::tag("script", $attr + [
                 'src' => $url
             ]);
         }
@@ -80,7 +80,7 @@ trait HelperTrait
     {
         $html = "";
         foreach ($urls as $url) {
-            $html .= self::tag("link", "", [
+            $html .= self::tag("link", [
                 "type" => "text/css",
                 "rel" => "stylesheet",
                 "href" => $url,
@@ -95,15 +95,35 @@ trait HelperTrait
      * @param array $urls
      * @return string
      */
-    public static function tag(string $tag, string $content = "", array $args = []): string
+    public static function tag(string $tag, ?array $attrs = null, string $content = ""): string
     {
-        $argStr = self::attrToString($args);
+        $attrStr = self::attrToString($attrs ?? []);
 
         if (in_array($tag, self::$autoclose)) {
-            return "<{$tag}{$argStr} />";
+            return "<{$tag}{$attrStr} />";
         }
 
-        return "<{$tag}{$argStr}>{$content}</{$tag}>\n";
+        return "<{$tag}{$attrStr}>{$content}</{$tag}>\n";
+    }
+
+    public static function openTag(string $tag, array $attrs = [])
+    {
+        $attrStr = self::attrToString($attrs ?? []);
+
+        if (in_array($tag, self::$autoclose)) {
+            return "<{$tag}{$attrStr} />";
+        }
+
+        return "<{$tag}{$attrStr}>";
+    }
+
+    public static function closeTag(string $tag)
+    {
+        if (in_array($tag, self::$autoclose)) {
+            return "";
+        }
+
+        return "</{$tag}>\n";
     }
 
     /**
