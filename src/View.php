@@ -12,60 +12,45 @@ class View implements Stringable
 
     private string $file;
 
-    // -------------------------------------------------------------------------
-
-    /**
-     * @param string $file
-     */
     public function __construct(string $file, array $data = [])
     {
         $this->file = $file;
         $this->import($data);
     }
 
-    /**
-     * @param string $file
-     * @param array $bag
-     * @return static
-     */
     public static function create(string $file, array $data = []): static
     {
         return new static($file, $data);
     }
 
-    /**
-     * @param string $file
-     * @param array $data
-     * @return static
-     */
     public function include(string $file, array $data = []): static
     {
         return new static($file, $data + $this->export());
     }
 
-    // -------------------------------------------------------------------------
-
-    /**
-     * @return string
-     */
     public function load(): string
     {
         if (!$this->file || !is_file($this->file)) {
             throw new InvalidArgumentException("File not found {$this->file}");
         }
 
-        if ($this->data) {
-            extract($this->data);
-        }
+        // Static closure: the template gets the data but no $this.
+        // func_get_arg() keeps $file and $data out of the template scope.
+        $render = static function (): string {
+            extract(func_get_arg(1), EXTR_SKIP);
+            ob_start();
+            try {
+                include func_get_arg(0);
+                return (string) ob_get_contents();
+            } finally {
+                ob_end_clean();
+            }
+        };
 
-        ob_start();
-        include $this->file;
-        return ob_get_clean() ?: '';
+        /** @disregard P1119 arguments are read with func_get_arg() */
+        return $render($this->file, $this->data);
     }
 
-    /**
-     * @return string
-     */
     public function __toString(): string
     {
         return $this->load();
