@@ -12,12 +12,15 @@ Quick lookup by intent. This is not exhaustive — read the source in `vendor/su
 | Render to a string | `load(): string` |
 | Same, implicitly | `__toString(): string` |
 | Build a partial inheriting this view's data | `include(string $file, array $data = []): static` |
+| The view whose template is executing | `static current(): static` |
 
 `load()` requires an **absolute** path (there is no view root), throws `InvalidArgumentException("File not found {$file}")` when `is_file()` fails, then includes the template from a **static closure**: the data bag is `extract()`ed with `EXTR_SKIP` (a `this` key is ignored), and the `include` is buffered inside `try`/`finally` so the buffer is closed even when the template throws. It can be called repeatedly.
 
-`include()` builds a new `View` with `$data + $this->export()` — the partial's own data wins, the parent's is the fallback. It does **not** render; call `->load()` on the result. It is not reachable from inside a template.
+`include()` builds a new `View` with `$data + $this->export()` — the partial's own data wins, the parent's is the fallback. It does **not** render; call `->load()` on the result. From inside a template, reach it through `static::current()->include(...)`.
 
-Inside the template: every data key is a local variable and nothing else is defined. There is no `$this`; the class scope is kept, so `HelperTrait` is reachable as `static::…` and a partial is rendered with `static::create($file, get_defined_vars())->load()`. `BagTrait` is not reachable.
+`current()` returns the innermost view being rendered: `load()` pushes the view before the include and pops it in a `finally`. Outside a render it throws `LogicException`. The stack is process-wide, like the output buffer, so a template must never suspend (Fiber, `await`) while rendering.
+
+Inside the template: every data key is a local variable and nothing else is defined. There is no `$this`; the class scope is kept, so `HelperTrait` is reachable as `static::…` and a partial is rendered with `static::create($file, get_defined_vars())->load()`. The view itself, and so `BagTrait`, is reachable only through `static::current()`.
 
 ## BagTrait (`Bredala\Template\BagTrait`)
 

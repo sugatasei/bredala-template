@@ -1,0 +1,1 @@
+<?= static::current()->export()['name'] ?>(<?= ($inner ?? false) ? static::create(__FILE__, ['name' => 'inner'])->load() : '' ?>)<?= static::current()->export()['name'] ?>

@@ -125,8 +125,9 @@ PlainText::tab()->add('- done')->eol(2);
 - **Tag content is not escaped; attribute values are.** `tag('p', null, $userInput)` injects raw HTML. Wrap content in `xss()` yourself.
 - **An exception thrown inside a template propagates, but the buffer is always closed** (`try`/`finally`) and the partial output discarded — no manual `ob_end_clean()` needed.
 - **Templates need absolute paths.** No view root, no extension guessing; `load()` throws `InvalidArgumentException("File not found …")`, and only at `load()` time, not at construction.
-- **There is no `$this` inside a template.** Use `static::xss()`, `static::tag()`, etc. (prefer `static::` over `self::` so a `View` subclass's overrides apply). Non-static methods — `set()`, `import()`, `export()`, `include()`, `load()` — are unreachable, so a template cannot touch the bag. Writing `$this->…` fails with `Error: Using $this when not in object context`.
+- **There is no `$this` inside a template.** Use `static::xss()`, `static::tag()`, etc. (prefer `static::` over `self::` so a `View` subclass's overrides apply). The view itself is reachable only through `static::current()` (the innermost view being rendered; `LogicException` outside a render). Writing to it with `static::current()->set()` does not change the running template's variables, which were extracted before the include. Writing `$this->…` fails with `Error: Using $this when not in object context`.
 - **A data key named `this` is silently ignored** (`EXTR_SKIP`).
+- **A template must never suspend while rendering** (Fiber, `await`). The render stack behind `current()` and the output buffer are process-wide, so a concurrent render would interleave with both. Load the data first.
 - **`import()` replaces the bag wholesale**, it does not merge. Use `set()` to add one key.
 - **`add()` on a key holding a non-array scalar is a silent no-op** (no exception, no conversion) — except for `null`, which the `??` guard treats as absent, so `add()` replaces it with a list.
 - **A missing template variable is a PHP warning, not an error**, and renders as empty. Always supply every key a template reads, or use `??` in the template.

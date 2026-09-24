@@ -34,12 +34,15 @@ cp -r vendor/sugatasei/bredala-template/skills/bredala-template .claude/skills/b
 
 - `load(): string` Rend le template et retourne le résultat.
 - `__toString(): string` Appelle `load()`.
+- `current(): static` Statique. Retourne la vue dont le template est en cours d'exécution, la plus interne en cas de rendus imbriqués. Lève `LogicException` en dehors d'un rendu.
 
 `load()` exige un chemin **absolu** : il n'y a pas de racine de vues, pas d'extension implicite, aucune logique de résolution. Un chemin relatif est résolu depuis le répertoire de travail courant. Construire les chemins depuis `__DIR__`.
 
 Un fichier absent n'est détecté qu'au moment du rendu : `load()` lève alors `InvalidArgumentException("File not found …")`. Un objet `View` ne garantit donc jamais l'existence du template.
 
 `load()` peut être appelé plusieurs fois.
+
+`load()` empile la vue avant d'inclure le template et la dépile dans un `finally`, ce qui garantit une pile vide après un rendu, même quand le template lève une exception. Cette pile est globale au processus, comme le tampon de sortie : **un template ne doit jamais se suspendre pendant son rendu** (Fiber, `await` d'un runtime asynchrone). Une autre vue rendue pendant la suspension mélangerait sa pile et sa sortie avec celles du template suspendu. Charger les données avant `load()`, le template ne fait que les afficher. Les threads (ext-parallel) et les workers (FPM, FrankenPHP, RoadRunner) ne sont pas concernés : chacun a ses propres statiques.
 
 ### Dans le template
 
@@ -66,7 +69,7 @@ Quelques points à connaître :
 - Une variable manquante est un **avertissement** PHP, pas une erreur, et se rend vide. En production, avertissements coupés, une faute de frappe dans un nom de variable est invisible. Fournir toutes les clés lues, ou utiliser `$x ?? ''` dans le template.
 - Une clé de données nommée `this` est **ignorée silencieusement** (`EXTR_SKIP`) : elle ne devient pas une variable.
 - Une exception levée dans un template remonte à l'appelant, mais le tampon de sortie est toujours refermé et la sortie partielle jetée.
-- Un template ne peut pas modifier la vue : `set()`, `import()`, `export()`, `include()` et `load()` ne sont pas statiques et donc inaccessibles. Seules les données extraites sont visibles, jamais les autres propriétés.
+- Sans `$this`, la vue n'est accessible dans le template qu'au travers de `static::current()`. Les variables sont extraites avant l'inclusion : un `static::current()->set()` ne change pas les variables du template en cours, seulement les données de la vue pour un `export()` ou un rendu ultérieur.
 - Préférer `static::` à `self::` : une sous-classe de `View` qui redéfinit un helper verra sa version appelée.
 
 ### Composition

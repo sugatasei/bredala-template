@@ -145,6 +145,49 @@ class ViewTest extends TestCase
     }
 
     // -------------------------------------------------------------------------
+    // current
+    // -------------------------------------------------------------------------
+
+    public function testCurrentReturnsTheViewBeingRendered()
+    {
+        self::assertSame('outer()outer', $this->view('current.phtml', ['name' => 'outer'])->load());
+    }
+
+    public function testCurrentFollowsNestedRenders()
+    {
+        $view = $this->view('current.phtml', ['name' => 'outer', 'inner' => true]);
+
+        self::assertSame('outer(inner()inner)outer', $view->load());
+    }
+
+    public function testSetThroughCurrentDoesNotChangeTheRunningTemplate()
+    {
+        $view = $this->view('current-set.phtml', ['name' => 'Tom']);
+
+        self::assertSame('Tom', $view->load());
+        self::assertSame(['name' => 'changed'], $view->export());
+    }
+
+    public function testCurrentThrowsOutsideARender()
+    {
+        $this->expectException(LogicException::class);
+
+        View::current();
+    }
+
+    public function testCurrentIsResetWhenATemplateThrows()
+    {
+        try {
+            $this->view('throws.phtml')->load();
+        } catch (RuntimeException) {
+        }
+
+        $this->expectException(LogicException::class);
+
+        View::current();
+    }
+
+    // -------------------------------------------------------------------------
     // include
     // -------------------------------------------------------------------------
 
