@@ -30,4 +30,9 @@ trait BagTrait
     {
         return $this->data;
     }
+
+    public function get(string $name): mixed
+    {
+        return $this->data[$name] ?? null;
+    }
 }
